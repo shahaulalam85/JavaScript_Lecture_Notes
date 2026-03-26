@@ -19,7 +19,7 @@ function NavBar({ active, onBack, onForward, onHome, onNavigate, canBack, canFor
           <>
             <span className="topnav-sep">/</span>
             <span className="topnav-crumb active">
-              {active === 'part1' ? 'Part 1 — Lec 01–13' : 'Part 2 — Lec 14–16'}
+              {active === 'part1' ? 'Part 1 — Lec 01–13' : 'Part 2 — Lec 14–17'}
             </span>
           </>
         )}
