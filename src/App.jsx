@@ -60,7 +60,7 @@ function App() {
   const goHome = () => navigate(null)
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", minHeight: "100vh" }}>
       <NavBar
         active={active}
         onBack={goBack}
@@ -73,7 +73,7 @@ function App() {
       {active === null && <Home onSelect={navigate} />}
       {active === 'part1' && <Part1 />}
       {active === 'part2' && <Part2 />}
-    </>
+    </div>
   )
 }
 
