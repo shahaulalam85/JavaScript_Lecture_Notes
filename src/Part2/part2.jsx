@@ -690,7 +690,7 @@ export default function JSNotes() {
   ];
 
   return (
-    <div style={{ fontFamily: "monospace", background: "#060d1a", minHeight: "100vh", color: "#e2e8f0" }}>
+    <div style={{ fontFamily: "monospace", background: "#060d1a", minHeight: "100vh", color: "#e2e8f0", width: "100%", boxSizing: "border-box" }}>
       {/* Header */}
       <div style={{ background: "linear-gradient(135deg,#0a1628,#0f2040)", borderBottom: "2px solid #ec4899", padding: "16px 24px", display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ background: "linear-gradient(135deg,#ec4899,#8b5cf6)", borderRadius: "50%", width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎯</div>
@@ -707,7 +707,7 @@ export default function JSNotes() {
         ))}
       </div>
 
-      <div style={{ display: "flex", maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ display: "flex", width: "100%" }}>
 
         {/* NOTES */}
         {tab === "notes" && (
@@ -720,7 +720,7 @@ export default function JSNotes() {
                 </button>
               ))}
             </div>
-            <div style={{ flex: 1, padding: 28, overflowY: "auto" }}>
+            <div style={{ flex: 1, padding: "28px 20px", overflowY: "auto", minWidth: 0 }}>
               <div style={{ borderBottom: `2px solid ${lec.color}`, paddingBottom: 12, marginBottom: 20 }}>
                 <span style={{ background: lec.color + "22", border: `1px solid ${lec.color}`, borderRadius: 6, padding: "3px 10px", color: lec.color, fontSize: 12, fontWeight: 700 }}>{lec.label}</span>
                 <h2 style={{ margin: "10px 0 0", color: "#fff", fontSize: 18 }}>{lec.title}</h2>
@@ -827,6 +827,7 @@ export default function JSNotes() {
               </div>
             )}
           </div>
+          
         )}
       </div>
 
