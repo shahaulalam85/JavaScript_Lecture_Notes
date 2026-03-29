@@ -10,7 +10,7 @@ function ColoredPre({ content }) {
         if (t.startsWith("/*") || t.endsWith("*/")) return <span key={i} style={{ color: "#6ee7b7", display: "block" }}>{line}</span>;
         if (/[=({};]/.test(line) && !/^[A-Z→✅❌⚠️#\d]/.test(t)) return <span key={i} style={{ color: "#fde68a", display: "block" }}>{line}</span>;
         if (/^[a-d]\./.test(t) || t.startsWith("→")) return <span key={i} style={{ color: "#c4b5fd", display: "block" }}>{line}</span>;
-        if (t.includes("Output") || t.startsWith("//")) return <span key={i} style={{ color: "#86efac", display: "block" }}>{line}</span>;
+        if (t.includes("Output") || t.startsWith("// Output")) return <span key={i} style={{ color: "#86efac", display: "block" }}>{line}</span>;
         if (t.includes("❌") || t.includes("DisAdv")) return <span key={i} style={{ color: "#fca5a5", display: "block" }}>{line}</span>;
         if (t.includes("✅") || t.includes("Adv :")) return <span key={i} style={{ color: "#6ee7b7", display: "block" }}>{line}</span>;
         if (/^[─=]+/.test(t) || /^[A-Z ]{4,}$/.test(t)) return <span key={i} style={{ color: "#94a3b8", display: "block" }}>{line}</span>;
@@ -103,7 +103,7 @@ Control Flow:
   line-2: [timer] ──────────→  register handler      handler (after 3s)
   line-3: console.log          3s→2s→1s→0s ────────→ [handler]
                                                            ↓
-  Event Loop:                                        Event Loop
+  Event Loop:
     1. check time expired?
     2. call stack empty?
        if empty → move handler → call stack
@@ -194,7 +194,6 @@ const areaOfCircle = function (radius) {
 // (same pattern repeated for diameter, circumference)
 
 // ── With Functional Programming (HOF) ───────────────────────
-// Business Logic Functions:
 const area = function (r) { return Math.PI * r * r; }
 const diameter = function (r) { return 2 * r; }
 const cirumfarence = function (r) { return 2 * Math.PI * r; }
@@ -381,12 +380,8 @@ addEventListener(event, handler, useCapture)
 let child = document.getElementById("child");
 let parent = document.getElementById("parent");
 
-child.addEventListener("click", function () {
-    console.log("Button clicked");
-});
-parent.addEventListener("click", function () {
-    console.log("Div clicked");
-});
+child.addEventListener("click", function () { console.log("Button clicked"); });
+parent.addEventListener("click", function () { console.log("Div clicked"); });
 document.querySelector("body").addEventListener("click", function () {
     console.log("Body clicked");
 });
@@ -398,15 +393,8 @@ document.querySelector("body").addEventListener("click", function () {
       },
       {
         heading: "Capturing Phase (useCapture: true)",
-        content: `let child = document.getElementById("child");
-let parent = document.getElementById("parent");
-
-child.addEventListener("click", function () {
-    console.log("Button clicked");
-}, true);   // ← true = capturing
-parent.addEventListener("click", function () {
-    console.log("Div clicked");
-}, true);
+        content: `child.addEventListener("click", function () { console.log("Button clicked"); }, true);
+parent.addEventListener("click", function () { console.log("Div clicked"); }, true);
 document.querySelector("body").addEventListener("click", function () {
     console.log("Body clicked");
 }, true);
@@ -422,23 +410,8 @@ document.querySelector("body").addEventListener("click", function () {
 To avoid event object propagation from parent↔child we use stopPropagation().
 If we have multiple handlers to the same element, all handlers still get a chance.
 
-// stopPropagation on body — stops at body (doesn't go further up)
-child.addEventListener("click", function (e) {
-    console.log("Button clicked");
-}, true);
-parent.addEventListener("click", function (e) {
-    console.log("Div clicked");
-}, true);
-document.querySelector("body").addEventListener("click", function (e) {
-    console.log("Body clicked");
-    e.stopPropagation();  // stops here
-}, true);
-// Output: Body clicked (only — propagation stopped)
-
-// stopPropagation on child with multiple handlers:
-child.addEventListener("click", function (e) {
-    console.log("Button clicked-1");
-    e.stopPropagation();  // stops going to parent, but child handlers all fire
+child.addEventListener("click", function (e) { console.log("Button clicked-1");
+    e.stopPropagation();
 }, true);
 child.addEventListener("click", function (e) { console.log("Button clicked-2"); }, true);
 child.addEventListener("click", function (e) { console.log("Button clicked-3"); }, true);
@@ -447,8 +420,7 @@ parent.addEventListener("click", function (e) { console.log("div clicked"); }, t
 //   div clicked    (capturing reaches parent first)
 //   Button clicked-1
 //   Button clicked-2
-//   Button clicked-3
-// (parent listener fires, child gets all 3 handlers, but no further propagation)`
+//   Button clicked-3`
       },
       {
         heading: "stopImmediatePropagation()",
@@ -465,13 +437,162 @@ child.addEventListener("click", function (e) {
 child.addEventListener("click", function (e) {
     console.log("Button clicked-3");  // ❌ never runs
 }, true);
-parent.addEventListener("click", function (e) {
-    console.log("div clicked");
-}, true);
+parent.addEventListener("click", function (e) { console.log("div clicked"); }, true);
 // Output:
 //   div clicked       (parent capturing fires first)
 //   Button clicked-1  (then stops immediately)
 // ❌ Button clicked-2 and clicked-3 are blocked`
+      }
+    ]
+  },
+  {
+    id: "lec18", label: "Lec 18", title: "forEach, Event Delegation, Pure Functions & Keyboard Events",
+    date: "27/03/26", color: "#a78bfa",
+    sections: [
+      {
+        heading: "forEach() — return type: void",
+        content: `// forEach() return type → void
+
+// HTML: <ul><li>Javascript</li><li>React</li><li>Node.js</li>
+//            <li>Express.js</li><li>Vue.js</li><li>Next.js</li></ul>
+
+document.querySelectorAll("li")
+    .forEach(function (item) {
+        console.log(item);
+    });
+// Output: li  li  li  li  li  li  (each li element)`
+      },
+      {
+        heading: "forEach — Adding Events (Not Recommended)",
+        content: `// ① Bad practice — adding addEventListener inside forEach
+//   (one handler per li = multiple handlers for same action)
+document.querySelectorAll("li")
+    .forEach(function (item) {
+        item.addEventListener("click", function (e) {
+            console.log("You selected : " + e.target.textContent);
+        });
+    });
+// Output on click:
+//   You selected : Express.js
+//   You selected : Node.js
+//   You selected : Next.js
+
+// ❌ This is not a good practice because in each "li"
+//    we are adding addEventListener`
+      },
+      {
+        heading: "Event Delegation",
+        content: `→ Due to event bubbling, event object is delegated from child nodes to
+  parent nodes so writing one handler at parent level to handle the
+  events occurred in child object is referred as 'Delegation'.
+
+// ② Better approach — Event Delegation (one handler on ul)
+document.querySelector("ul").addEventListener("click", function (e) {
+    console.log("You selected : " + e.target.textContent);
+});
+// Output on clicking any li:
+//   You selected : Express.js
+//   You selected : Node.js
+//   You selected : Next.js`
+      },
+      {
+        heading: "forEach — index parameter",
+        content: `// ① Using template literal (shows [object HTMLLIElement]):
+document.querySelectorAll("li")
+    .forEach(function (item, index) {
+        console.log("Index " + index + " : " + item);
+    });
+// Output: Index 0 : [object HTMLLIElement]
+//         Index 1 : [object HTMLLIElement] ...
+
+// ② Using console.log with comma (shows actual element):
+document.querySelectorAll("li")
+    .forEach(function (item, index) {
+        console.log("Index", index, ":", item);
+    });
+// Output: Index 0 : ► li
+//         Index 1 : ► li  ...`
+      },
+      {
+        heading: "Pure Function",
+        content: `Pure Function → No outside dependency + No outside modification
+
+// Impure Function (has outside dependency):
+let total = 0;
+function addToTotal(num) {
+    total += num;      // modifies external variable
+    return total;
+}
+
+// Pure Function:
+function add(a, b) {
+    return a + b;      // no side effects
+}
+
+✅ Same inputs  → Same Output
+✅ Doesn't modify any external variables
+✅ Doesn't log, fetch, or change DOM
+
+Note → callback function should always be a pure function
+        (it should avoid side effects).`
+      },
+      {
+        heading: "Events in JavaScript — Categories",
+        content: `a. Binding to UI
+      a. keyboard
+            a. Clipboard event : cut, copy, paste
+      b. mouse
+      c. form events : submit, reset
+      d. timer event : setTimeout(), ...........`
+      },
+      {
+        heading: "Keyboard Events",
+        content: `keydown → key is pressed
+keyup   → key is released
+
+// Live typing Example:
+// <h2>Live typing Example</h2>
+// <input type="text" id="search" placeholder="Type something ....">
+
+document.querySelector("input").addEventListener("keyup", function (e) {
+    console.log(e);
+    alert("key is pressed and released");
+})
+
+// Output on typing "sv":
+//   KeyboardEvent {isTrusted: true, key: 'Shift', code: 'ShiftRight', ...}
+//   KeyboardEvent {isTrusted: true, key: 's', code: 'KeyS', ...}
+//   KeyboardEvent {isTrusted: true, key: 'v', code: 'KeyV', ...}
+//   KeyboardEvent {isTrusted: true, key: ' ', code: 'Space', ...}`
+      },
+      {
+        heading: "PointerEvent — Properties",
+        content: `// PointerEvent fired on button click:
+// PointerEvent {isTrusted: true, pointerId: 2, width: 1, height: 1, pressure: 0, ...}
+//   altitudeAngle: 1.5707963267948966
+//   bubbles: true
+//   cancelable: true
+//   clientX: 43    ← In button, where I have clicked, it's giving position
+//   clientY: 114
+//   composed: true
+//   detail: 1
+//   height: 1
+//   layerX: 43
+//   layerY: 114
+//   offsetX: 34
+//   offsetY: 8
+//   pageX: 43
+//   pageY: 114
+//   pointerId: 2
+//   pointerType: "touch"
+//   returnValue: true
+//   screenX: 88
+//   screenY: 233
+//   target: button
+//   type: "click"
+//   width: 1
+//   x: 43
+//   y: 114`
       }
     ]
   }
@@ -561,10 +682,7 @@ btn.addEventListener("click", () => console.log("msg 3"));
 btn1.addEventListener("click", handler);
 btn2.addEventListener("click", () => {
     btn1.removeEventListener("click", handler);
-});
-// Click btn1 → logs
-// Click btn2 → removes
-// Click btn1 → nothing`, output: ["(btn1) I am listening", "(btn2) listener removed", "(btn1 again) [nothing]"], note: "✅ removeEventListener works ONLY with same function reference. Named handler → works." },
+});`, output: ["(btn1) I am listening", "(btn2) listener removed", "(btn1 again) [nothing]"], note: "✅ removeEventListener works ONLY with same function reference. Named handler → works." },
     { label: "5. removeEventListener — anonymous FAILS", code: `btn1.addEventListener("click", function () {
     console.log("clicked");
 });
@@ -573,8 +691,7 @@ btn1.removeEventListener("click", function () {
 }); // ❌ different references!`, output: ["clicked", "clicked", "clicked (every click...)"], note: "❌ Anonymous functions are different objects in memory. removeEventListener fails silently." },
   ],
   propagation: [
-    { label: "1. Bubbling (default)", code: `// <div id="parent"><button id="child">Click</button></div>
-child.addEventListener("click", () => console.log("Button clicked"));
+    { label: "1. Bubbling (default)", code: `child.addEventListener("click", () => console.log("Button clicked"));
 parent.addEventListener("click", () => console.log("Div clicked"));
 document.querySelector("body")
     .addEventListener("click", () => console.log("Body clicked"));
@@ -588,29 +705,90 @@ document.querySelector("body")
 parent.addEventListener("click", e => console.log("Div clicked"), true);
 document.querySelector("body").addEventListener("click", function(e) {
     console.log("Body clicked");
-    e.stopPropagation(); // stops here
+    e.stopPropagation();
 }, true);`, output: ["Body clicked"], note: "stopPropagation on body: event captured at body, stops — div and button never fire." },
     { label: "4. stopPropagation() — siblings still fire", code: `child.addEventListener("click", function(e) {
     console.log("Button clicked-1");
-    e.stopPropagation(); // stops going to parent
+    e.stopPropagation();
 }, true);
 child.addEventListener("click", e => console.log("Button clicked-2"), true);
 child.addEventListener("click", e => console.log("Button clicked-3"), true);
 parent.addEventListener("click", e => console.log("div clicked"), true);`, output: ["div clicked", "Button clicked-1", "Button clicked-2", "Button clicked-3"], note: "stopPropagation stops propagation to OTHER elements but ALL handlers on same element still fire." },
     { label: "5. stopImmediatePropagation()", code: `child.addEventListener("click", function(e) {
     console.log("Button clicked-1");
-    e.stopImmediatePropagation(); // stops ALL further handlers
+    e.stopImmediatePropagation();
 }, true);
 child.addEventListener("click", e => console.log("Button clicked-2"), true);
 child.addEventListener("click", e => console.log("Button clicked-3"), true);
 parent.addEventListener("click", e => console.log("div clicked"), true);`, output: ["div clicked", "Button clicked-1"], note: "stopImmediatePropagation = stopPropagation + stops ALL sibling handlers on same element too." },
     { label: "6. preventDefault() on form", code: `document.getElementById("frmElement")
     .addEventListener("submit", function (e) {
-        e.preventDefault(); // no page refresh!
+        e.preventDefault();
         alert("data not sent to backend");
         let userName = e.target[0].value;
         document.querySelector("h1").innerText = "UserName is " + userName;
     });`, output: ["(alert) data not sent to backend", "(h1 updates with username — no refresh)"], note: "preventDefault() stops the default browser behavior (form submit = page reload). Data stays." },
+  ],
+  delegation: [
+    { label: "1. forEach — log each li", code: `// <ul><li>Javascript</li><li>React</li>
+//      <li>Node.js</li><li>Express.js</li>
+//      <li>Vue.js</li><li>Next.js</li></ul>
+
+document.querySelectorAll("li")
+    .forEach(function (item) {
+        console.log(item);
+    });`, output: ["► li (Javascript)", "► li (React)", "► li (Node.js)", "► li (Express.js)", "► li (Vue.js)", "► li (Next.js)"], note: "forEach return type = void. Iterates each NodeList item. Cannot use break/continue." },
+    { label: "2. forEach — index param (+ operator)", code: `document.querySelectorAll("li")
+    .forEach(function (item, index) {
+        console.log("Index " + index + " : " + item);
+    });`, output: ["Index 0 : [object HTMLLIElement]", "Index 1 : [object HTMLLIElement]", "Index 2 : [object HTMLLIElement]", "Index 3 : [object HTMLLIElement]", "Index 4 : [object HTMLLIElement]", "Index 5 : [object HTMLLIElement]"], note: "Using + operator with element converts it to string → '[object HTMLLIElement]'." },
+    { label: "3. forEach — index param (comma)", code: `document.querySelectorAll("li")
+    .forEach(function (item, index) {
+        console.log("Index", index, ":", item);
+    });`, output: ["Index 0 : ► li", "Index 1 : ► li", "Index 2 : ► li", "Index 3 : ► li", "Index 4 : ► li", "Index 5 : ► li"], note: "Using comma in console.log shows the actual element (expandable ► li) instead of string." },
+    { label: "4. ❌ forEach with addEventListener (bad)", code: `// ❌ Not recommended — adds handler to EACH li
+document.querySelectorAll("li")
+    .forEach(function (item) {
+        item.addEventListener("click", function (e) {
+            console.log("You selected : " + e.target.textContent);
+        });
+    });
+// Click Express.js
+// Click Node.js
+// Click Next.js`, output: ["You selected : Express.js", "You selected : Node.js", "You selected : Next.js"], note: "❌ Bad practice: N listeners for N items. Each li gets its own handler — memory inefficient." },
+    { label: "5. ✅ Event Delegation (best)", code: `// ✅ One handler on parent ul — Event Delegation
+document.querySelector("ul")
+    .addEventListener("click", function (e) {
+        console.log("You selected : " + e.target.textContent);
+    });
+// Click Express.js
+// Click Node.js
+// Click Next.js`, output: ["You selected : Express.js", "You selected : Node.js", "You selected : Next.js"], note: "✅ Event Delegation: one handler on ul catches all li clicks via bubbling. Efficient & scalable." },
+    { label: "6. Pure vs Impure Function", code: `// Impure Function — outside dependency
+let total = 0;
+function addToTotal(num) {
+    total += num;      // modifies external variable
+    return total;
+}
+console.log(addToTotal(5));  // 5
+console.log(addToTotal(5));  // 10 — different output same input!
+
+// Pure Function — no side effects
+function add(a, b) {
+    return a + b;
+}
+console.log(add(2, 3));  // always 5
+console.log(add(2, 3));  // always 5`, output: ["5", "10", "5", "5"], note: "Impure: same input → different output (depends on external state). Pure: same input → ALWAYS same output." },
+    { label: "7. Keyboard Event — keyup", code: `// <input type="text" id="search" placeholder="Type something ....">
+document.querySelector("input")
+    .addEventListener("keyup", function (e) {
+        console.log(e);
+        console.log(e.key);
+        console.log(e.code);
+    });
+// Type "sv":
+// KeyboardEvent {isTrusted: true, key: 's', code: 'KeyS', ...}
+// KeyboardEvent {isTrusted: true, key: 'v', code: 'KeyV', ...}`, output: ["KeyboardEvent {isTrusted: true, key: 's', code: 'KeyS', location: 0, ctrlKey: false, ...}", "s", "KeyS", "KeyboardEvent {isTrusted: true, key: 'v', code: 'KeyV', location: 0, ctrlKey: false, ...}", "v", "KeyV"], note: "keyup fires when key is released. e.key = character pressed. e.code = physical key location on keyboard." },
   ],
 };
 
@@ -622,10 +800,10 @@ const quiz = [
   { q: "console.log('A'); setTimeout(fn,0); console.log('B'); — Output?", opts: ["A → fn → B","fn → A → B","A → B → fn","B → fn → A"], ans: 2 },
   { q: "Which is true about stopPropagation()?", opts: ["Stops ALL handlers on same element","Stops propagation to other elements but same-element siblings still fire","Prevents default browser behavior","Removes the event listener"], ans: 1 },
   { q: "What does stopImmediatePropagation() do differently from stopPropagation()?", opts: ["Also clears the callback queue","Also stops ALL other handlers on the SAME element","Only works in capturing phase","Prevents default form submit"], ans: 1 },
-  { q: "addEventListener('click', handler, true) registers for which phase?", opts: ["Bubbling","Target","Capturing","Both bubbling and capturing"], ans: 2 },
-  { q: "HOF = Higher Order Function means?", opts: ["Function declared at top","Function with no return","Function that accepts another function as argument","Function inside a class"], ans: 2 },
-  { q: "Why does removeEventListener fail with anonymous functions?", opts: ["JS disallows it","They are different objects/references in memory","Anonymous functions can't be events","Browser API restriction"], ans: 1 },
-  { q: "Array.map(fn) vs custom calcuate(radius, fn) — key difference?", opts: ["map() is slower","map() returns raw numbers; calcuate() can apply .toFixed()","calcuate() is built-in","map() only works with numbers"], ans: 1 },
+  { q: "What is Event Delegation?", opts: ["Adding one handler to every child element","Adding one handler at parent level to catch child events via bubbling","Delegating events to the window object","A method to remove event listeners"], ans: 1 },
+  { q: "A Pure Function must...", opts: ["Modify external state","Always return the same output for the same inputs and have no side effects","Use only arrow functions","Accept a callback as argument"], ans: 1 },
+  { q: "forEach() return type is?", opts: ["Array","NodeList","boolean","void"], ans: 3 },
+  { q: "keydown vs keyup — difference?", opts: ["keydown fires on release, keyup on press","keydown fires when key is pressed, keyup when key is released","They are identical","keyup only works with letters"], ans: 1 },
 ];
 
 // ── PROPAGATION DIAGRAM ───────────────────────────────────────────────────────
@@ -687,23 +865,24 @@ export default function JSNotes() {
     { id: "hof", label: "🔼 HOF & Callbacks", color: "#06b6d4" },
     { id: "events", label: "🖱 Browser Events", color: "#10b981" },
     { id: "propagation", label: "🌊 Propagation", color: "#ec4899" },
+    { id: "delegation", label: "🎯 Delegation & forEach", color: "#a78bfa" },
   ];
 
   return (
-    <div style={{ fontFamily: "monospace", background: "#060d1a", minHeight: "100vh", color: "#e2e8f0", width: "100%", boxSizing: "border-box" }}>
+    <div style={{ fontFamily: "monospace", background: "#060d1a", minHeight: "100vh", color: "#e2e8f0" }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg,#0a1628,#0f2040)", borderBottom: "2px solid #ec4899", padding: "16px 24px", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ background: "linear-gradient(135deg,#ec4899,#8b5cf6)", borderRadius: "50%", width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎯</div>
+      <div style={{ background: "linear-gradient(135deg,#0a1628,#0f2040)", borderBottom: "2px solid #a78bfa", padding: "16px 24px", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ background: "linear-gradient(135deg,#ec4899,#a78bfa)", borderRadius: "50%", width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎯</div>
         <div>
-          <h1 style={{ margin: 0, fontSize: 19, color: "#fff" }}>JavaScript — Lec 14 to 17</h1>
-          <p style={{ margin: 0, color: "#ec4899", fontSize: 11 }}>classList · Async JS · HOF · Callbacks · Browser Events · Event Propagation · stopPropagation</p>
+          <h1 style={{ margin: 0, fontSize: 19, color: "#fff" }}>JavaScript — Lec 14 to 18</h1>
+          <p style={{ margin: 0, color: "#a78bfa", fontSize: 11 }}>classList · Async JS · HOF · Callbacks · Events · Propagation · Delegation · forEach · Pure Functions · Keyboard Events</p>
         </div>
       </div>
 
       {/* Nav */}
       <div style={{ background: "#0b1120", borderBottom: "1px solid #1f2937", display: "flex" }}>
         {[{ id: "notes", label: "📖 Notes" }, { id: "demo", label: "▶ Live Demo" }, { id: "quiz", label: "🧠 Quiz" }].map(n => (
-          <button key={n.id} onClick={() => setTab(n.id)} style={{ padding: "11px 22px", background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "monospace", color: tab === n.id ? "#ec4899" : "#475569", borderBottom: tab === n.id ? "3px solid #ec4899" : "3px solid transparent" }}>{n.label}</button>
+          <button key={n.id} onClick={() => setTab(n.id)} style={{ padding: "11px 22px", background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "monospace", color: tab === n.id ? "#a78bfa" : "#475569", borderBottom: tab === n.id ? "3px solid #a78bfa" : "3px solid transparent" }}>{n.label}</button>
         ))}
       </div>
 
@@ -720,7 +899,7 @@ export default function JSNotes() {
                 </button>
               ))}
             </div>
-            <div style={{ flex: 1, padding: "28px 20px", overflowY: "auto", minWidth: 0 }}>
+            <div style={{ flex: 1, padding: 28, overflowY: "auto" }}>
               <div style={{ borderBottom: `2px solid ${lec.color}`, paddingBottom: 12, marginBottom: 20 }}>
                 <span style={{ background: lec.color + "22", border: `1px solid ${lec.color}`, borderRadius: 6, padding: "3px 10px", color: lec.color, fontSize: 12, fontWeight: 700 }}>{lec.label}</span>
                 <h2 style={{ margin: "10px 0 0", color: "#fff", fontSize: 18 }}>{lec.title}</h2>
@@ -738,7 +917,7 @@ export default function JSNotes() {
         {/* DEMO */}
         {tab === "demo" && (
           <div style={{ flex: 1, padding: 28 }}>
-            <h2 style={{ color: "#ec4899", marginTop: 0 }}>▶ Live Output Simulator</h2>
+            <h2 style={{ color: "#a78bfa", marginTop: 0 }}>▶ Live Output Simulator</h2>
             <p style={{ color: "#475569", fontSize: 13, marginBottom: 18 }}>Select topic and snippet, then click Run.</p>
             <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
               {topicBtns.map(t => (
@@ -747,14 +926,14 @@ export default function JSNotes() {
             </div>
             <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
               {demoList.map((d, i) => (
-                <button key={i} onClick={() => { setDemoIdx(i); setShowOutput(false); }} style={{ padding: "6px 11px", borderRadius: 6, border: `1px solid ${demoIdx === i ? "#ec4899" : "#1f2937"}`, background: demoIdx === i ? "#ec489922" : "#0b1120", color: demoIdx === i ? "#ec4899" : "#64748b", cursor: "pointer", fontSize: 11, fontFamily: "monospace" }}>{i + 1}. {d.label}</button>
+                <button key={i} onClick={() => { setDemoIdx(i); setShowOutput(false); }} style={{ padding: "6px 11px", borderRadius: 6, border: `1px solid ${demoIdx === i ? "#a78bfa" : "#1f2937"}`, background: demoIdx === i ? "#a78bfa22" : "#0b1120", color: demoIdx === i ? "#a78bfa" : "#64748b", cursor: "pointer", fontSize: 11, fontFamily: "monospace" }}>{i + 1}. {d.label}</button>
               ))}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div style={{ background: "#060d1a", border: "1px solid #1f2937", borderRadius: 12, overflow: "hidden" }}>
                 <div style={{ background: "#1f2937", padding: "8px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "#64748b", fontSize: 12 }}>📄 {demo.label}</span>
-                  <button onClick={runDemo} style={{ background: "#ec4899", border: "none", borderRadius: 6, padding: "5px 14px", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12, fontFamily: "monospace" }}>▶ Run</button>
+                  <button onClick={runDemo} style={{ background: "#a78bfa", border: "none", borderRadius: 6, padding: "5px 14px", color: "#060d1a", fontWeight: 700, cursor: "pointer", fontSize: 12, fontFamily: "monospace" }}>▶ Run</button>
                 </div>
                 <pre style={{ color: "#fde68a", fontSize: 12.5, margin: 0, padding: "16px", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{demo.code}</pre>
               </div>
@@ -775,13 +954,36 @@ export default function JSNotes() {
               </div>
             </div>
             {showOutput && demoTopic === "propagation" && (demoIdx === 0 || demoIdx === 1) && <PropDiagram />}
+
+            {/* Event Delegation visual */}
+            {showOutput && demoTopic === "delegation" && (demoIdx === 3 || demoIdx === 4) && (
+              <div style={{ marginTop: 20, background: "#0b1120", border: "1px solid #1f2937", borderRadius: 12, padding: 20 }}>
+                <h4 style={{ color: "#a78bfa", margin: "0 0 14px" }}>🎯 Event Delegation vs forEach Listeners</h4>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ flex: 1, background: "#450a0a", border: "2px solid #ef4444", borderRadius: 10, padding: 14 }}>
+                    <div style={{ color: "#f87171", fontWeight: 700, marginBottom: 8 }}>❌ forEach (N listeners)</div>
+                    <div style={{ color: "#fca5a5", fontSize: 12 }}>li → handler</div>
+                    <div style={{ color: "#fca5a5", fontSize: 12 }}>li → handler</div>
+                    <div style={{ color: "#fca5a5", fontSize: 12 }}>li → handler</div>
+                    <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 8 }}>6 elements = 6 handlers 😰</div>
+                  </div>
+                  <div style={{ flex: 1, background: "#064e3b", border: "2px solid #10b981", borderRadius: 10, padding: 14 }}>
+                    <div style={{ color: "#6ee7b7", fontWeight: 700, marginBottom: 8 }}>✅ Delegation (1 listener)</div>
+                    <div style={{ color: "#6ee7b7", fontSize: 12 }}>ul → ONE handler</div>
+                    <div style={{ color: "#6ee7b7", fontSize: 12 }}>  ↑ catches all li clicks</div>
+                    <div style={{ color: "#6ee7b7", fontSize: 12 }}>  via bubbling</div>
+                    <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 8 }}>N elements = 1 handler 🎉</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* QUIZ */}
         {tab === "quiz" && (
           <div style={{ flex: 1, padding: 28 }}>
-            <h2 style={{ color: "#ec4899", marginTop: 0 }}>🧠 Knowledge Check — Lec 14–17</h2>
+            <h2 style={{ color: "#a78bfa", marginTop: 0 }}>🧠 Knowledge Check — Lec 14–18</h2>
             {!quizDone ? (
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
@@ -789,7 +991,7 @@ export default function JSNotes() {
                   <span style={{ color: "#34d399", fontWeight: 700 }}>Score: {quizScore}/{quiz.length}</span>
                 </div>
                 <div style={{ width: "100%", height: 4, background: "#1f2937", borderRadius: 4, marginBottom: 24 }}>
-                  <div style={{ width: `${(quizQ / quiz.length) * 100}%`, height: "100%", background: "#ec4899", borderRadius: 4, transition: "width 0.3s" }} />
+                  <div style={{ width: `${(quizQ / quiz.length) * 100}%`, height: "100%", background: "#a78bfa", borderRadius: 4, transition: "width 0.3s" }} />
                 </div>
                 <div style={{ background: "#0b1120", border: "1px solid #1f2937", borderRadius: 14, padding: 28, marginBottom: 16 }}>
                   <p style={{ color: "#e2e8f0", fontSize: 16, fontWeight: 700, margin: "0 0 22px", lineHeight: 1.6 }}>{quiz[quizQ].q}</p>
@@ -812,7 +1014,7 @@ export default function JSNotes() {
                 </div>
                 {quizSel !== null && (
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <button onClick={nextQ} style={{ background: "#ec4899", border: "none", borderRadius: 10, padding: "11px 26px", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 14, fontFamily: "monospace" }}>
+                    <button onClick={nextQ} style={{ background: "#a78bfa", border: "none", borderRadius: 10, padding: "11px 26px", color: "#060d1a", fontWeight: 700, cursor: "pointer", fontSize: 14, fontFamily: "monospace" }}>
                       {quizQ + 1 >= quiz.length ? "Results →" : "Next →"}
                     </button>
                   </div>
@@ -821,18 +1023,17 @@ export default function JSNotes() {
             ) : (
               <div style={{ textAlign: "center", background: "#0b1120", border: "1px solid #1f2937", borderRadius: 20, padding: 48 }}>
                 <div style={{ fontSize: 60, marginBottom: 14 }}>{quizScore >= 9 ? "🏆" : quizScore >= 7 ? "🎯" : "📚"}</div>
-                <h3 style={{ color: "#ec4899", fontSize: 28 }}>{quizScore}/{quiz.length}</h3>
-                <p style={{ color: "#94a3b8", marginBottom: 24 }}>{quizScore === 10 ? "Perfect score! Events & Propagation mastered! 🌟" : quizScore >= 7 ? "Great! Revisit Event Propagation and stopPropagation." : "Head back to Notes and Live Demo to review!"}</p>
-                <button onClick={resetQuiz} style={{ background: "#ec4899", border: "none", borderRadius: 10, padding: "12px 28px", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 15, fontFamily: "monospace" }}>Retry 🔄</button>
+                <h3 style={{ color: "#a78bfa", fontSize: 28 }}>{quizScore}/{quiz.length}</h3>
+                <p style={{ color: "#94a3b8", marginBottom: 24 }}>{quizScore === 10 ? "Perfect score! Lec 14–18 mastered! 🌟" : quizScore >= 7 ? "Great! Revisit Event Delegation and Pure Functions." : "Head back to Notes and Live Demo to review!"}</p>
+                <button onClick={resetQuiz} style={{ background: "#a78bfa", border: "none", borderRadius: 10, padding: "12px 28px", color: "#060d1a", fontWeight: 700, cursor: "pointer", fontSize: 15, fontFamily: "monospace" }}>Retry 🔄</button>
               </div>
             )}
           </div>
-          
         )}
       </div>
 
       <div style={{ background: "#0b1120", borderTop: "1px solid #1f2937", padding: "12px 24px", textAlign: "center" }}>
-        <p style={{ color: "#1f2937", fontSize: 11, margin: 0 }}>JavaScript Lec 14–17 · PW Institute of Innovation · BEN01SOTUGBTC25B01</p>
+        <p style={{ color: "#1f2937", fontSize: 11, margin: 0 }}>JavaScript Lec 14–18 · PW Institute of Innovation · BEN01SOTUGBTC25B01</p>
       </div>
     </div>
   );
