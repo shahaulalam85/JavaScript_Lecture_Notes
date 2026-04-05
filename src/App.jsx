@@ -2,10 +2,11 @@ import { useState } from 'react'
 import Home from './components/Home'
 import Part1 from './Part1/part1'
 import Part2 from './Part2/part2'
+import Part3 from './Part3/part3'
 import './App.css'
 import './components/NavBar.css'
 
-const parts = ['part1', 'part2']
+const parts = ['part1', 'part2', 'part3']
 
 function NavBar({ active, onBack, onForward, onHome, onNavigate, canBack, canForward }) {
   return (
@@ -19,7 +20,7 @@ function NavBar({ active, onBack, onForward, onHome, onNavigate, canBack, canFor
           <>
             <span className="topnav-sep">/</span>
             <span className="topnav-crumb active">
-              {active === 'part1' ? 'Part 1 — Lec 01–13' : 'Part 2 — Lec 14–18'}
+              {active === 'part1' ? 'Part 1 — Lec 01–13' : active === 'part2' ? 'Part 2 — Lec 14–18' : 'Part 3 — Lec 19–21'}
             </span>
           </>
         )}
@@ -32,7 +33,7 @@ function NavBar({ active, onBack, onForward, onHome, onNavigate, canBack, canFor
               className={`topnav-part ${active === p ? 'active' : ''}`}
               onClick={() => onNavigate(p)}
             >
-              {i === 0 ? '⚡ Part 1' : '🎯 Part 2'}
+              {i === 0 ? '⚡ Part 1' : i === 1 ? '🎯 Part 2' : '🚀 Part 3'}
             </button>
           ))}
         </div>
@@ -73,6 +74,7 @@ function App() {
       {active === null && <Home onSelect={navigate} />}
       {active === 'part1' && <Part1 />}
       {active === 'part2' && <Part2 />}
+      {active === 'part3' && <Part3 />}
     </div>
   )
 }

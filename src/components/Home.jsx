@@ -12,10 +12,18 @@ const parts = [
   {
     id: 'part2',
     label: 'Part 2',
-    range: 'Lec 14 – 16',
+    range: 'Lec 14 – 18',
     accent: '#10b981',
     icon: '🎯',
     topics: ['classList API', 'Async JS & Event Loop', 'Higher Order Functions', 'Callbacks', 'Browser Events', 'removeEventListener'],
+  },
+  {
+    id: 'part3',
+    label: 'Part 3',
+    range: 'Lec 19 – 21',
+    accent: '#a78bfa',
+    icon: '🚀',
+    topics: ['Event Delegation', 'getModifierState', 'Event State Events', 'Form Validation', 'onChange Event', 'Keyboard Events'],
   },
 ]
 

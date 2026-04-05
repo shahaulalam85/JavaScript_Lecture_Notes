@@ -899,7 +899,7 @@ export default function JSNotes() {
                 </button>
               ))}
             </div>
-            <div style={{ flex: 1, padding: 28, overflowY: "auto" }}>
+            <div style={{ flex: 1, minWidth: 0, padding: "28px 20px", overflowY: "auto" }}>
               <div style={{ borderBottom: `2px solid ${lec.color}`, paddingBottom: 12, marginBottom: 20 }}>
                 <span style={{ background: lec.color + "22", border: `1px solid ${lec.color}`, borderRadius: 6, padding: "3px 10px", color: lec.color, fontSize: 12, fontWeight: 700 }}>{lec.label}</span>
                 <h2 style={{ margin: "10px 0 0", color: "#fff", fontSize: 18 }}>{lec.title}</h2>
